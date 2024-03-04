@@ -10,6 +10,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/lightningnetwork/lnd/channeldb"
 	"github.com/lightningnetwork/lnd/input"
 	"github.com/lightningnetwork/lnd/lnwallet/chainfee"
@@ -163,6 +164,7 @@ func DeriveCommitmentKeys(commitPoint *btcec.PublicKey,
 	// If this commitment should omit the tweak for the remote point, then
 	// we'll use that directly, and ignore the commitPoint tweak.
 	if tweaklessCommit {
+		fmt.Printf("using tweakless %x\n", toRemoteBasePoint.SerializeCompressed())
 		keyRing.ToRemoteKey = toRemoteBasePoint
 
 		// If this is not our commitment, the above ToRemoteKey will be
@@ -172,6 +174,7 @@ func DeriveCommitmentKeys(commitPoint *btcec.PublicKey,
 			keyRing.LocalCommitKeyTweak = nil
 		}
 	} else {
+		fmt.Printf("TweakPubKey(%x, %x)\n", toRemoteBasePoint.SerializeCompressed(), commitPoint.SerializeCompressed())
 		keyRing.ToRemoteKey = input.TweakPubKey(
 			toRemoteBasePoint, commitPoint,
 		)
@@ -895,6 +898,11 @@ func CreateCommitTx(chanType channeldb.ChannelType,
 	if err != nil {
 		return nil, err
 	}
+	walletLog.Infof("CommitScriptToSelf(%x, %x, %d) = %x\n",
+		keyRing.ToLocalKey.SerializeCompressed(),
+		keyRing.RevocationKey.SerializeCompressed(),
+		uint32(localChanCfg.CsvDelay),
+		toLocalScript.PkScript())
 
 	// Next, we create the script paying to the remote.
 	toRemoteScript, _, err := CommitScriptToRemote(
@@ -903,6 +911,9 @@ func CreateCommitTx(chanType channeldb.ChannelType,
 	if err != nil {
 		return nil, err
 	}
+	walletLog.Infof("CommitScriptToRemote(%x) = %x\n",
+		keyRing.ToRemoteKey.SerializeCompressed(),
+		toRemoteScript.PkScript())
 
 	// Now that both output scripts have been created, we can finally create
 	// the transaction itself. We use a transaction version of 2 since CSV
@@ -955,6 +966,7 @@ func CreateCommitTx(chanType channeldb.ChannelType,
 		}
 	}
 
+	fmt.Printf("created commit tx %v\n", spew.Sdump(commitTx))
 	return commitTx, nil
 }
 

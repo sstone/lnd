@@ -2122,6 +2122,11 @@ func (c *CommitScriptTree) CtrlBlockForPath(path ScriptPath,
 func NewLocalCommitScriptTree(csvTimeout uint32,
 	selfKey, revokeKey *btcec.PublicKey) (*CommitScriptTree, error) {
 
+	fmt.Println("NewLocalCommitScriptTree")
+	fmt.Printf("selfKey = %x\n", selfKey.SerializeCompressed())
+	fmt.Printf("revokeKey = %x\n", revokeKey.SerializeCompressed())
+	fmt.Printf("csvTimeout = %d\n", csvTimeout)
+
 	// First, we'll need to construct the tapLeaf that'll be our delay CSV
 	// clause.
 	delayScript, err := TaprootLocalCommitDelayScript(csvTimeout, selfKey)
@@ -2135,6 +2140,8 @@ func NewLocalCommitScriptTree(csvTimeout uint32,
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("delayScript = %x\n", delayScript)
+	fmt.Printf("revokeScript = %x\n", revokeScript)
 
 	// With both scripts computed, we'll now create a tapscript tree with
 	// the two leaves, and then obtain a root from that.
@@ -2144,12 +2151,14 @@ func NewLocalCommitScriptTree(csvTimeout uint32,
 		delayTapLeaf, revokeTapLeaf,
 	)
 	tapScriptRoot := tapScriptTree.RootNode.TapHash()
+	fmt.Printf("tapScriptRoot = %x\n", tapScriptRoot.CloneBytes())
 
 	// Now that we have our root, we can arrive at the final output script
 	// by tweaking the internal key with this root.
 	toLocalOutputKey := txscript.ComputeTaprootOutputKey(
 		&TaprootNUMSKey, tapScriptRoot[:],
 	)
+	fmt.Printf("toLocalOutputKey = %x\n", toLocalOutputKey.SerializeCompressed())
 
 	return &CommitScriptTree{
 		ScriptTree: ScriptTree{
@@ -2579,6 +2588,9 @@ func NewRemoteCommitScriptTree(remoteKey *btcec.PublicKey,
 	tapLeaf := txscript.NewBaseTapLeaf(remoteScript)
 	tapScriptTree := txscript.AssembleTaprootScriptTree(tapLeaf)
 	tapScriptRoot := tapScriptTree.RootNode.TapHash()
+	fmt.Printf("remoteScript %x tapScriptRoot %x\n",
+		remoteScript,
+		tapScriptRoot.CloneBytes())
 
 	// Now that we have our root, we can arrive at the final output script
 	// by tweaking the internal key with this root.

@@ -10,6 +10,7 @@ import (
 	"github.com/btcsuite/btcd/btcec/v2/schnorr/musig2"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/lightningnetwork/lnd/input"
 	"github.com/lightningnetwork/lnd/keychain"
 	"github.com/lightningnetwork/lnd/lnwire"
@@ -135,6 +136,7 @@ func (p *MusigPartialSig) Verify(msg []byte, pub *btcec.PublicKey) bool {
 	var m [32]byte
 	copy(m[:], msg)
 
+	walletLog.Infof("verify combinedNonce = %v\n", p.combinedNonce)
 	return p.sig.Verify(
 		p.signerNonce, p.combinedNonce, p.signerKeys, pub, m,
 		musig2.WithSortedKeys(), musig2.WithBip86SignTweak(),
@@ -464,6 +466,8 @@ func (m *MusigSession) VerifyCommitSig(commitTx *wire.MsgTx,
 	if err != nil {
 		return nil, err
 	}
+
+	walletLog.Infof("Verifying sig for %v %v", commitTx.TxHash(), spew.Sdump(commitTx))
 
 	walletLog.Infof("Verifying new musig2 sig for session=%x, nonce=%s",
 		m.session.SessionID[:], m.nonces.String())

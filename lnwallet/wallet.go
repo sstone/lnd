@@ -1467,6 +1467,7 @@ func CreateCommitmentTxns(localBalance, remoteBalance btcutil.Amount,
 		remoteCommitPoint, false, chanType, ourChanCfg, theirChanCfg,
 	)
 
+	walletLog.Info("creating local commit tx")
 	ourCommitTx, err := CreateCommitTx(
 		chanType, fundingTxIn, localCommitmentKeys, ourChanCfg,
 		theirChanCfg, localBalance, remoteBalance, 0, initiator,

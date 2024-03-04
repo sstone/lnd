@@ -2,6 +2,7 @@ package input
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/txscript"
@@ -97,6 +98,7 @@ type ScriptTree struct {
 func (s *ScriptTree) PkScript() []byte {
 	// Script building can never internally return an error, so we ignore
 	// the error to simplify the interface.
+	fmt.Printf("creating p2tr(%x)\n", s.TaprootKey.SerializeCompressed()[1:])
 	pkScript, _ := PayToTaprootScript(s.TaprootKey)
 	return pkScript
 }
